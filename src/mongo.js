@@ -1,5 +1,5 @@
 const mongoose=require("mongoose")
-mongoose.connect("mongodb://localhost:27017/LoginFormPractice")
+mongoose.connect("mongodb+srv://sainikhushi007:FEcIKbrGLe8FDZ33@clustervhg.sy34kax.mongodb.net/Virtual_Herbal_Garden")
 
 .then(()=>{
     console.log('mongoose connected');
