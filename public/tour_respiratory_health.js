@@ -6,7 +6,7 @@ const textureLoader = new THREE.TextureLoader();
 const soilTexture = textureLoader.load('TCom_Ground_Soil3_header.jpg');
 soilTexture.wrapS = THREE.RepeatWrapping;
 soilTexture.wrapT = THREE.RepeatWrapping;
-soilTexture.repeat.set(20, 20); // Adjust the repetition for soil texture
+soilTexture.repeat.set(20, 20);
 
 const grassTexture = textureLoader.load('Grass004_4K-JPG/Grass004_4K-JPG_Color.jpg');
 grassTexture.wrapS = THREE.RepeatWrapping;
@@ -14,49 +14,85 @@ grassTexture.wrapT = THREE.RepeatWrapping;
 grassTexture.repeat.set(20, 20);
 
 // Load sky texture for background
-const skyTexture = textureLoader.load('sky.jpg'); // Replace with your sky texture path
-scene.background = skyTexture;  // Set the scene background to the sky texture
+const skyTexture = textureLoader.load('sky.jpg');
+scene.background = skyTexture;
 
-// Create the soil plane between the plants
+// Create the thin soil plane in the middle
 const soilMaterial = new THREE.MeshStandardMaterial({ map: soilTexture });
-const soilGeometry = new THREE.PlaneGeometry(30, 500); // Soil area between plants
+const soilGeometry = new THREE.PlaneGeometry(10, 500);
 const soilPlane = new THREE.Mesh(soilGeometry, soilMaterial);
 soilPlane.rotation.x = -Math.PI / 2;
-soilPlane.position.set(0, 0, -30); // Position it between the plants
+soilPlane.position.set(0, 0, -30);
 scene.add(soilPlane);
 
-// Create grass for the left side of the plant lane
-const grassMaterial = new THREE.MeshBasicMaterial({ map: grassTexture, transparent: true });
-const grassGeometry = new THREE.PlaneGeometry(60, 500); // Grass area on the left
+// Create grass for the left side of the soil lane
+const grassMaterial = new THREE.MeshBasicMaterial({ map: grassTexture });
+const grassGeometry = new THREE.PlaneGeometry(30, 500);
 const grassLeft = new THREE.Mesh(grassGeometry, grassMaterial);
 grassLeft.rotation.x = -Math.PI / 2;
-grassLeft.position.set(-45, 0, -30); // Position it to the left of the plants
+grassLeft.position.set(-20, 0, -30);
 scene.add(grassLeft);
 
-// Create grass for the right side of the plant lane
+// Create grass for the right side of the soil lane
 const grassRight = new THREE.Mesh(grassGeometry, grassMaterial);
 grassRight.rotation.x = -Math.PI / 2;
-grassRight.position.set(45, 0, -30); // Position it to the right of the plants
+grassRight.position.set(20, 0, -30);
 scene.add(grassRight);
 
-// Remove any extra sky spheres, if present
-// Ensure no residual black color or inner spheres:
-scene.traverse((object) => {
-    if (object.isMesh && object.material.color && object.material.color.getHex() === 0x000000) {
-        scene.remove(object); // Remove any black-colored objects
-    }
+// Loaders for additional 3D models (bench, streetlight, fountain)
+const loader = new THREE.GLTFLoader();
+
+// Load bench model on the left side grass
+loader.load('models/wooden_bench/scene.gltf', (gltf) => {
+    const bench = gltf.scene;
+    bench.position.set(10, 0, -40);
+    bench.scale.set(0.04, 0.04, 0.04);
+    
+    // Rotate the model (example: rotate 90 degrees around the X axis)
+    bench.rotation.y = Math.PI / 2; // Rotating by 90 degrees
+
+    scene.add(bench);
+});
+
+
+// Load streetlight model on the left side grass, below the bench
+loader.load('models/street_light/scene.gltf', (gltf) => {
+    const streetlight = gltf.scene;
+    streetlight.position.set(-10, 0, -50);
+    streetlight.scale.set(1, 1.5, 1);
+    scene.add(streetlight);
+});
+
+// Load fountain model on the right side grass
+loader.load('models/street_light/scene.gltf', (gltf) => {
+    const streetlight = gltf.scene;
+    streetlight.position.set(-10, 0, -5);
+    streetlight.scale.set(1, 1.5, 1);
+    scene.add(streetlight);
+});
+
+// Load bench model on the right side grass, below the fountain
+loader.load('models/wooden_bench/scene.gltf', (gltf) => {
+    const bench = gltf.scene;
+    bench.position.set(10, 0, 5);
+    bench.scale.set(0.04, 0.04, 0.04);
+    
+    // Rotate the model (example: rotate 90 degrees around the X axis)
+    bench.rotation.y = Math.PI / 2; // Rotating by 90 degrees
+
+    scene.add(bench);
 });
 
 // Camera setup
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 30); // Adjust camera position to fit the new layout
+camera.position.set(0, 5, 30);
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.getElementById('tour-container').appendChild(renderer.domElement);
 
-// Lights
+// Lighting
 const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
 
@@ -64,8 +100,7 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 directionalLight.position.set(1, 1, 1).normalize();
 scene.add(directionalLight);
 
-// Loaders and plants
-const loader = new THREE.GLTFLoader();
+// Plants (already loaded into left and right positions)
 const plants = [];
 
 // Load plant models and place them along the soil lane
@@ -87,14 +122,14 @@ function loadPlantModel(path, position, scale, name) {
 // Load different plants with custom scales and positions
 const plantLoadPromises = [
     // Left side
-    loadPlantModel('models/hawthorn_tree/scene.gltf', { x: -15, y: 1, z: -50 }, { x: 7, y: 7, z: 7 }, 'Hawthorn'),
-    loadPlantModel('models/echinacea/scene.gltf', { x: -15, y: -0.5, z: -25 }, { x: 15, y: 15, z: 15 }, 'Echinacea'),
-    loadPlantModel('models/chili_pepper/scene.gltf', { x: -15, y: 1, z: 0 }, { x: 1, y: 1, z: 1 }, 'Chilli Pepper'),
+    loadPlantModel('models/hawthorn_tree/scene.gltf', { x: -25, y: 1, z: -50 }, { x: 7, y: 7, z: 7 }, 'Hawthorn'),
+    loadPlantModel('models/echinacea/scene.gltf', { x: -25, y: -0.5, z: -25 }, { x: 15, y: 15, z: 15 }, 'Echinacea'),
+    loadPlantModel('models/chili_pepper/scene.gltf', { x: -25, y: 1, z: 0 }, { x: 1, y: 1, z: 1 }, 'Chilli Pepper'),
 
     // Right side
-    loadPlantModel('models/elderberry/scene.gltf', { x: 15, y: -1.5, z: -50 }, { x: 0.50, y: 0.50, z: 0.50 }, 'Elderberry'),
-    loadPlantModel('models/chinese_milk_vetch_astragalus_sinicus/scene.gltf', { x: 15, y: -0.1, z: -25 }, { x: 70, y: 70, z: 70 }, 'Astragalus'),
-    loadPlantModel('models/tulsi/scene.gltf', { x: 15, y: 0, z: 0 }, { x: 9, y: 9, z: 9 }, 'Tulsi'),
+    loadPlantModel('models/elderberry/scene.gltf', { x: 25, y: -1.5, z: -50 }, { x: 0.50, y: 0.50, z: 0.50 }, 'Elderberry'),
+    loadPlantModel('models/chinese_milk_vetch_astragalus_sinicus/scene.gltf', { x: 25, y: -0.1, z: -25 }, { x: 70, y: 70, z: 70 }, 'Astragalus'),
+    loadPlantModel('models/tulsi/scene.gltf', { x: 25, y: 0, z: 0 }, { x: 9, y: 9, z: 9 }, 'Tulsi'),
 ];
 
 // Raycaster for interaction

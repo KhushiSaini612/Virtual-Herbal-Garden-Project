@@ -20,7 +20,7 @@ const samplePlants = [
       "Antimicrobial"
 
     ],
-    imageUrl: "https://assets.flowersnfruits.com/uploads/product-pics/auspicious-tulsi-plant.jpg",
+    imageUrl: "https://m.media-amazon.com/images/I/711jDGV8ibL._UF894,1000_QL80_.jpg",
     modelUrl: "/models/tulsi/scene.gltf",
     habitat: {
       nativeRegion: "Indian subcontinent",
@@ -343,7 +343,7 @@ const samplePlants = [
     "Cognitive Functions"
 ]
 ,
-    imageUrl: "https://www.best4hedging.co.uk/media/catalog/product/c/r/cra-pg-90-120-5l.jpg?optimize=high&bg-color=255,255,255&fit=bounds&height=466&width=466&canvas=466:466",
+    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNHqZcGra47HGzpMc_wuHHOaSyqxbY-kTG1Q&s",
     modelUrl: "/models/hawthorn.glb",
     habitat: {
       nativeRegion: "Europe, North America, and Asia",
