@@ -53,11 +53,11 @@ app.post('/signup', async (req, res) => {
             bookmarks: [] 
         };
 
-        await LogInCollection.insertMany([data]);
-        return res.status(201).render("home", { naming: req.body.name });
+        await LogInCollection.create(data);
+        return res.status(201).render('login', { successMessage: "Signup successful! Please log in." });
         
     } catch (err) {
-      
+      console.error("Signup Error:", err); 
         return res.render("signup", { errorMessage: "Something went wrong, please try again." });
     }
 });

@@ -51,10 +51,12 @@ const logInSchema=new mongoose.Schema({
     password:{
         type:String,
         required:true,
-        unique:true,
         
     },
-    bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Plant' ,unique:true}],
+    bookmarks: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Plant' }],
+    default: []
+},
     notes: [
       {
         text: {
