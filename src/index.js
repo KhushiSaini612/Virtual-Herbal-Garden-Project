@@ -1,4 +1,5 @@
 const express = require("express")
+const ollama = require("ollama");
 const path = require("path")
 const app = express()
 const session = require('express-session');
@@ -349,6 +350,219 @@ app.post('/contact-submit', async (req, res) => {
     res.status(500).send('Something went wrong. Please try again later.');
   }
 });
+
+
+
+
+async function runOllamaPhi(prompt) {
+  try {
+    const response = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "phi3:mini",
+
+        // ⭐⭐ Updated and Improved Prompt ⭐⭐
+        prompt:
+          "You are HerbBot. Explain any herb in a clean and short format:\n" +
+          "1) 1-2 line introduction\n" +
+          "2) Key benefits (very short)\n" +
+          "3) Main uses (very short)\n" +
+          "Keep the whole answer within 4-6 lines.\n\n" +
+          "User: " + prompt + "\nBot:",
+
+        stream: false
+      })
+    });
+
+    const data = await response.json();
+
+    const reply =
+      data.response ||
+      data.output ||
+      data.message ||
+      data.text ||
+      JSON.stringify(data);
+
+    return reply;
+
+  } catch (err) {
+    console.error("Ollama API Error:", err);
+    return "AI unavailable right now.";
+  }
+}
+
+
+
+
+
+
+app.post("/chatbot", async (req, res) => {
+  try {
+    const userMessage = req.body.message.toLowerCase();
+    const userId = req.session.userId;
+    let botReply = "Sorry, I didn't understand. Please try again.";
+
+    // -------------------------------------------------
+    // ⭐ PART 0 — GREETINGS
+    // -------------------------------------------------
+    if (
+      userMessage.includes("hello") ||
+      userMessage.includes("hi") ||
+      userMessage.includes("namaste")
+    ) {
+      botReply =
+        `Hello! 🌿 I am <b>HerbBot</b><br>` +
+        `How can I help you today?<br><br>` +
+        `Try asking:<br>` +
+        `• Benefits of Tulsi<br>` +
+        `• Show my bookmarks / notes<br>` +
+        `• Skincare category<br>` +
+        `• Aloe vera medicinal uses`;
+      
+      return res.json({ reply: botReply });
+    }
+
+    // -------------------------------------------------
+    // ⭐ PART 1 — BOOKMARKS (AI can show user bookmarks)
+    // -------------------------------------------------
+    if (userMessage.includes("bookmark")) {
+      if (!userId) {
+        botReply = "Please login to view your bookmarks 😊";
+      } else {
+        const user = await LogInCollection
+          .findById(userId)
+          .populate("bookmarks");
+
+        if (!user.bookmarks || user.bookmarks.length === 0) {
+          botReply = "You have no bookmarked plants 🌱 Add some!";
+        } else {
+          botReply =
+            `⭐ <b>Your Bookmarked Plants:</b><br>` +
+            user.bookmarks
+              .map((p) => `• ${p.name}`)
+              .join("<br>");
+        }
+      }
+
+      return res.json({ reply: botReply });
+    }
+
+    // -------------------------------------------------
+    // ⭐ PART 2 — NOTES (AI can show user notes)
+    // -------------------------------------------------
+    if (userMessage.includes("notes")) {
+      if (!userId) {
+        botReply = "Please login to view notes 😊";
+      } else {
+        const user = await LogInCollection.findById(userId);
+
+        if (!user.notes || user.notes.length === 0) {
+          botReply = "You have no notes yet 📝";
+        } else {
+          botReply =
+            `📝 <b>Your Notes:</b><br>` +
+            user.notes
+              .map((n, i) => `${i + 1}. ${n.text}`)
+              .join("<br>");
+        }
+      }
+
+      return res.json({ reply: botReply });
+    }
+
+    // -------------------------------------------------
+    // ⭐ PART 3 — AI-Detected Plant Name
+    // -------------------------------------------------
+    const allPlants = await Plant.find({});
+    let foundPlant = null;
+
+    for (let p of allPlants) {
+      if (userMessage.includes(p.name.toLowerCase())) {
+        foundPlant = p;
+        break;
+      }
+    }
+
+    // -------------------------------------------------
+    // ⭐ PART 4 — IF PLANT FOUND
+    // -------------------------------------------------
+    if (foundPlant) {
+      const P = foundPlant;
+
+      if (userMessage.includes("botanical")) {
+        botReply = `🌿 <b>${P.name}</b><br><b>Botanical Name:</b> ${P.botanicalName}`;
+      }
+
+      else if (
+        userMessage.includes("use") ||
+        userMessage.includes("benefit") ||
+        userMessage.includes("medicinal")
+      ) {
+        botReply =
+          `🌿 <b>${P.name}</b><br>` +
+          `<b>Medicinal Uses:</b><br>` +
+          P.medicinalUses
+            .map((m, i) => `${i + 1}. ${m.use} - ${m.description}`)
+            .join("<br>");
+      }
+
+      else if (userMessage.includes("category")) {
+        botReply = `🌿 <b>${P.name}</b><br><b>Category:</b> ${P.category.join(", ")}`;
+      }
+
+      else if (userMessage.includes("habitat")) {
+        botReply = `🌿 <b>${P.name}</b><br><b>Habitat:</b> ${P.habitat.nativeRegion}`;
+      }
+
+      else if (
+        userMessage.includes("grow") ||
+        userMessage.includes("cultivation") ||
+        userMessage.includes("planting") ||
+        userMessage.includes("water")
+      ) {
+        botReply =
+          `🌿 <b>${P.name}</b><br>` +
+          `<b>Growing Requirements:</b><br>` +
+          `Soil: ${P.habitat.growingConditions.soil}<br>` +
+          `Sunlight: ${P.habitat.growingConditions.sunlight}<br>` +
+          `Water: ${P.habitat.growingConditions.water}<br>` +
+          `Propagation: ${P.methodsOfCultivation.propagation}`;
+      }
+
+      else {
+        botReply =
+          `🌿 <b>${P.name}</b><br>` +
+          `<b>Botanical Name:</b> ${P.botanicalName}<br>` +
+          `<b>Category:</b> ${P.category.join(", ")}<br>` +
+          `<b>Medicinal Uses:</b><br>` +
+          P.medicinalUses
+            .map((m, i) => `${i + 1}. ${m.use} - ${m.description}`)
+            .join("<br>") +
+          `<br><b>Habitat:</b> ${P.habitat.nativeRegion}`;
+      }
+
+      return res.json({ reply: botReply });
+    }
+
+    // -------------------------------------------------
+    // ⭐ PART 5 — AI FALLBACK (Phi-2)
+    // -------------------------------------------------
+    const aiText = await runOllamaPhi(userMessage);
+    botReply = aiText;
+
+    return res.json({ reply: botReply });
+
+  } catch (error) {
+    console.error("Chatbot Error:", error);
+    return res.json({
+      reply: "Something went wrong 😓 Please try again."
+    });
+  }
+});
+
+
+
 
 
 app.listen(3000, () => {
