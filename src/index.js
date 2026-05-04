@@ -1,13 +1,22 @@
+
 const express = require("express")
 const path = require("path")
+require("dotenv").config();
+require('@babel/register')({
+  presets: ['@babel/preset-react']
+});
+
 const app = express()
 const session = require('express-session');
+const reactViews = require('express-react-views');
+
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false } 
 }));
+
 const router = express.Router();
 
 const { LogInCollection, Movie, Plant ,User, Contact} = require('./mongo');
@@ -21,7 +30,8 @@ const tempelatePath = path.join(__dirname, '../tempelates')
 const publicPath = path.join(__dirname, '../public')
 console.log(publicPath);
 
-app.set('view engine', 'hbs')
+app.engine('jsx', reactViews.createEngine())
+app.set('view engine', 'jsx')
 app.set('views', tempelatePath)
 app.use(express.static(publicPath))
 
@@ -353,191 +363,91 @@ app.post('/contact-submit', async (req, res) => {
 
 
 
+
 app.post("/chatbot", async (req, res) => {
   try {
-    const userMessage = req.body.message.toLowerCase();
-    const userId = req.session.userId;
+    const userMessage = req.body.message;
 
-    let botReply = "Sorry, I don't understand. Please try again.";
+    const words = userMessage.split(" ");
 
-    if (
-      userMessage.includes("hello") ||
-      userMessage.includes("hi") ||
-      userMessage.includes("namaste")
-    ) {
-      botReply = `
-        Hello! 🌿 I am <b>HerbBot</b><br>
-        How can I help you today?<br><br>
-        <b>Try asking:</b><br>
-        • Benefits of Tulsi<br>
-        • Show my bookmarks / notes<br>
-        • Skincare category<br>
-        • Aloe vera medicinal uses
-      `;
+let plants = await Plant.find({
+  $or: [
+    { name: { $regex: userMessage, $options: "i" } },
+    { commonNames: { $in: words.map(w => new RegExp(w, "i")) } }
+  ]
+});
+    if (plants.length === 0) {
+      plants = await Plant.find({}).limit(3);
     }
 
-    else if (userMessage.includes("bookmark")) {
-      if (!userId) {
-        botReply = "Please login to view your bookmarks 😊";
-      } else {
-        const user = await LogInCollection
-          .findById(userId)
-          .populate("bookmarks");
+    const context = plants.map((p) => `
+Plant Name: ${p.name}
+Botanical Name: ${p.botanicalName}
+Common Names: ${p.commonNames?.join(", ")}
+Category: ${p.category.join(", ")}
+Habitat:
+- Native Region: ${p.habitat?.nativeRegion}
+- Soil: ${p.habitat?.growingConditions?.soil}
+- Sunlight: ${p.habitat?.growingConditions?.sunlight}
+- Water: ${p.habitat?.growingConditions?.water}
+Medicinal Uses:
+${p.medicinalUses.map((m) => `- ${m.use}: ${m.description}`).join("\n")}
+Practical Uses:
+${p.practicalUses.map((u) => `
+Method: ${u.method}
+Steps:
+${u.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
+Duration: ${u.duration}
+Benefits: ${u.benefits}
+`).join("\n")}
+Cultivation Details:
+Propagation: ${p.methodsOfCultivation?.propagation}
 
-        if (!user.bookmarks || user.bookmarks.length === 0) {
-          botReply = "You have no bookmarked plants 🌱 Add some!";
-        } else {
-          botReply =
-            `⭐ <b>Your Bookmarked Plants:</b><br>` +
-            user.bookmarks.map(p => `• ${p.name}`).join("<br>");
-        }
-      }
-    }
+Planting:
+- Instructions: ${p.methodsOfCultivation?.planting?.instructions}
+- Spacing: ${p.methodsOfCultivation?.planting?.spacing}
 
-    else if (userMessage.includes("notes")) {
-      if (!userId) {
-        botReply = "Please login to view notes 😊";
-      } else {
-        const user = await LogInCollection.findById(userId);
+- Watering: ${p.methodsOfCultivation?.watering}
+- Fertilization: ${p.methodsOfCultivation?.fertilization}
+- Pruning: ${p.methodsOfCultivation?.pruning}
+- Pests & Diseases: ${p.methodsOfCultivation?.pestsAndDiseases}
+`).join("\n");
 
-        if (!user.notes || user.notes.length === 0) {
-          botReply = "You have no notes yet 📝";
-        } else {
-          botReply =
-            `📝 <b>Your Notes:</b><br>` +
-            user.notes
-              .map((n, i) => `${i + 1}. ${n.text}`)
-              .join("<br>");
-        }
-      }
-    }
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",  // ✅ yeh current working model hai
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "system",
+            content: "You are a smart herbal assistant. Answer in English. Be friendly. Always give step-by-step practical answers from given data. Do not say data is missing unless truly absent."
+          },
+          {
+            role: "user",
+            content: `Plant Data:
+${context}
 
-    else if (userMessage.includes("category")) {
-      const categories = [
-        "Trees",
-        "Shrubs",
-        "Herbs",
-        "Digestive Health",
-        "Immunity Boosting",
-        "Edible Plant",
-        "Mental Health",
-        "Pain Relief",
-        "Hormonal Health",
-        "Skincare",
-        "Respiratory Health",
-        "Antimicrobial",
-        "Cognitive Functions"
-      ];
+Sawaal: ${userMessage}`
+          }
+        ]
+      })
+    });
 
-      let foundCategory = null;
+    const data = await response.json();
+    console.log("Groq Status:", response.status);
+    console.log("Groq Response:", JSON.stringify(data).slice(0, 200));
 
-      categories.forEach(cat => {
-        if (userMessage.includes(cat.toLowerCase())) {
-          foundCategory = cat;
-        }
-      });
-
-      if (foundCategory) {
-        const plants = await Plant.find({
-          category: { $regex: new RegExp(foundCategory, "i") }
-        });
-
-        if (!plants || plants.length === 0) {
-          botReply = `No plants found in <b>${foundCategory}</b> category`;
-        } else {
-          botReply =
-            `🌿 <b>Plants in ${foundCategory} category:</b><br>` +
-            plants.map(p => `• ${p.name}`).join("<br>");
-        }
-      } else {
-        botReply = "Please specify a valid category 😊";
-      }
-    }
-
-    else {
-      const allPlants = await Plant.find({});
-      let selectedPlant = null;
-
-      allPlants.forEach(p => {
-        if (userMessage.includes(p.name.toLowerCase())) {
-          selectedPlant = p;
-        }
-      });
-
-      if (selectedPlant) {
-        if (userMessage.includes("botanical")) {
-          botReply = `
-            🌿 <b>${selectedPlant.name}</b><br>
-            <b>Botanical Name:</b> ${selectedPlant.botanicalName}
-          `;
-        }
-
-        else if (
-          userMessage.includes("use") ||
-          userMessage.includes("benefit") ||
-          userMessage.includes("medicinal")
-        ) {
-          botReply =
-            `🌿 <b>${selectedPlant.name}</b><br>
-             <b>Medicinal Uses:</b><br>` +
-            selectedPlant.medicinalUses
-              .map(
-                (m, i) => `${i + 1}. ${m.use} - ${m.description}`
-              )
-              .join("<br>");
-        }
-
-        else if (userMessage.includes("habitat")) {
-          botReply = `
-            🌿 <b>${selectedPlant.name}</b><br>
-            <b>Habitat:</b> ${selectedPlant.habitat.nativeRegion}
-          `;
-        }
-
-        else if (
-          userMessage.includes("grow") ||
-          userMessage.includes("cultivation") ||
-          userMessage.includes("planting") ||
-          userMessage.includes("water")
-        ) {
-          botReply = `
-            🌿 <b>${selectedPlant.name}</b><br>
-            <b>Growing Requirements:</b><br>
-            Soil: ${selectedPlant.habitat.growingConditions.soil}<br>
-            Sunlight: ${selectedPlant.habitat.growingConditions.sunlight}<br>
-            Water: ${selectedPlant.habitat.growingConditions.water}<br>
-            Propagation: ${selectedPlant.methodsOfCultivation.propagation}
-          `;
-        }
-
-        else {
-          botReply = `
-            🌿 <b>${selectedPlant.name}</b><br>
-            <b>Botanical Name:</b> ${selectedPlant.botanicalName}<br>
-            <b>Category:</b> ${selectedPlant.category.join(", ")}<br><br>
-            <b>Medicinal Uses:</b><br>
-            ${selectedPlant.medicinalUses
-              .map(
-                (m, i) => `${i + 1}. ${m.use} - ${m.description}`
-              )
-              .join("<br>")}<br><br>
-            <b>Habitat:</b> ${selectedPlant.habitat.nativeRegion}<br>
-            <b>Growing Needs:</b><br>
-            Soil: ${selectedPlant.habitat.growingConditions.soil}<br>
-            Sunlight: ${selectedPlant.habitat.growingConditions.sunlight}<br>
-            Water: ${selectedPlant.habitat.growingConditions.water}
-          `;
-        }
-      }
-    }
-
-    return res.json({ reply: botReply });
+    const botReply = data?.choices?.[0]?.message?.content || "Sorry, I didn't understand it 😊";
+    res.json({ reply: botReply });
 
   } catch (error) {
-    console.error("Chatbot Error:", error);
-    return res.json({
-      reply: "Something went wrong 😓 Please try again."
-    });
+    console.error("Chatbot error:", error.message);
+    res.json({ reply: "Server is currently busy 😓 Please wait for some time" });
   }
 });
 

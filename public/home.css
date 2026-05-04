@@ -432,3 +432,26 @@ footer p {
 #sendBtn:hover {
   background: #2e8b57;
 }
+.bot-message {
+  background: #f0f7f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 6px 0;
+}
+
+.bot-text p {
+  margin: 4px 0;
+}
+
+.bot-text ul, .bot-text ol {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.bot-text strong {
+  color: #2d6a2d;
+}
+
+.bot-text li {
+  margin: 3px 0;
+}

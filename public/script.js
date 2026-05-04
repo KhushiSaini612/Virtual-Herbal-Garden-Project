@@ -107,9 +107,10 @@ async function sendMessage() {
 
   /* 🤖 Bot reply */
   chatMessages.innerHTML += `
-    <div>
-      <span><b>Bot:</b></span> ${data.reply}
-    </div>
+    <div class="bot-message">
+    <span><b>🌿 Bot:</b></span>
+    <div class="bot-text">${marked.parse(data.reply)}</div>
+  </div>
   `;
 
   chatMessages.scrollTop = chatMessages.scrollHeight;

@@ -26,6 +26,14 @@ const plantSchema = new mongoose.Schema({
       description: { type: String, required: true }
     }
   ],
+  practicalUses: [
+  {
+    method: String,
+    steps: [String],
+    duration: String,
+    benefits: String
+  }
+],
   methodsOfCultivation: {
     propagation: { type: String, required: true },
     planting: {
