@@ -455,3 +455,29 @@ footer p {
 .bot-text li {
   margin: 3px 0;
 }
+nav ul {
+  display: flex;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* NAV ITEMS */
+nav ul li {
+  padding: 8px 15px;
+  border-radius: 12px;
+  background: #f1f9de;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  font-weight: 700;
+  color: #151037;
+  cursor: pointer;
+  box-shadow: 0 3px 10px #333;
+}
+nav ul li:hover {
+  background: #4caf50;
+  color: white;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+}

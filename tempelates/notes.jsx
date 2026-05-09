@@ -150,18 +150,19 @@ background-color: #ef5350;
               <li key={note._id}>
                 {note.text}
                 <form
-                  action={`/delete-note/${note._id}`}
-                  method="POST"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <button className="delete-note" type="submit">
-                    <i className="fas fa-trash-alt"></i> Delete
-                  </button>
-                </form>
+  action={`/delete-note/${note._id}`}
+  method="POST"
+  onsubmit="return confirm('Are you sure you want to delete this note?')"
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  }}
+>
+  <button className="delete-note" type="submit">
+    <i className="fas fa-trash-alt"></i> Delete
+  </button>
+</form>
               </li>
             ))}
           </ul>

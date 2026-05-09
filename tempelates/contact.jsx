@@ -13,8 +13,8 @@ function Contact() {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
       </head>
       <body>
-        <style>{`.go-home-btn { display: inline-block; margin: 10px; padding: 8px 12px; background-color: #12ae4e; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; } .go-home-btn:hover { background-color: #046512; }`}</style>
-        <header>
+        <style>{`.go-home-btn { display: inline-block; margin: 10px; padding: 8px 12px; background-color: #12ae4e; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; } .go-home-btn:hover { background-color: #046512; } header{display:flex; justify-content: flex-end; align-items: center;}`}</style>
+        <header >
           <a href="/home" className="go-home-btn">Go to Home</a>
         </header>
 

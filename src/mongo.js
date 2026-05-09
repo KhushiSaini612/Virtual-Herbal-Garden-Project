@@ -99,12 +99,54 @@ const contactSchema = mongoose.Schema({
 });
 
 const Contact = mongoose.model('Contact', contactSchema);
+// Herbal Plan Schema (ADD THIS)
 
+const remedySchema = new mongoose.Schema({
+  plant: {
+    type: String,
+    required: true
+  },
+  method: {
+    type: String,
+    required: true
+  },
+  steps: {
+    type: [String],
+    required: true
+  },
+  time: {
+    type: String,
+    required: true
+  },
+  dosage: {
+    type: String,
+    required: true
+  },
+  benefit: {
+    type: String,
+    required: true
+  }
+});
+
+const herbalPlanSchema = new mongoose.Schema({
+  problem: {
+    type: String,
+    required: true
+  },
+  ageGroup: {
+    type: String,
+    required: true
+  },
+  remedies: [remedySchema]
+});
+
+const HerbalPlan = mongoose.model("HerbalPlan", herbalPlanSchema);
 
   module.exports = {
     LogInCollection,
     Plant,
-    Contact  
+    Contact,
+    HerbalPlan
   };
 
 

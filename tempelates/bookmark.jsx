@@ -18,7 +18,7 @@ function Bookmark(props) {
         <header></header>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 30, paddingRight: 30 }}>
-          <h1>Your Bookmarked Plants</h1>
+          <h2>Your Bookmarked Plants</h2>
           <a href="/home" className="go-home-btn">Go to Home</a>
         </div>
 
@@ -29,9 +29,20 @@ function Bookmark(props) {
                 <h2>{plant.name}</h2>
                 <img src={plant.imageUrl} alt={plant.name} />
                 <p style={{ fontSize: 'larger' }}>Uses: {plant.medicinalUses?.[0]?.use}</p>
-                <form action={`/remove-bookmark/${plant._id}`} method="POST" style={{ marginTop: 10 }}>
-                  <button type="submit" className="btn btn-danger">Remove</button>
-                </form>
+                <form
+  action={`/remove-bookmark/${plant._id}`}
+  method="POST"
+  style={{ marginTop: 10 }}
+  onSubmit={(e) => {
+    if (!confirm("Remove this bookmark?")) {
+      e.preventDefault();
+    }
+  }}
+>
+  <button type="submit" className="btn btn-danger">
+    Remove
+  </button>
+</form>
               </div>
             ))
           ) : (

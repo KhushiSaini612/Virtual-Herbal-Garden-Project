@@ -21,10 +21,13 @@ function Home(props) {
           <div className="logo"><img src="/logo.png" alt="" style={{ height: 140, width: 140, borderRadius: '50%' }} /> Herb Vatika</div>
           <nav>
             <ul>
-              <a href="/home" style={{ textDecoration: 'none' }}><li>Home</li></a>
+              {/* <a href="/home" style={{ textDecoration: 'none' }}><li>Home</li></a> */}
               <a href="/bookmarks" style={{ textDecoration: 'none' }}><li>Bookmark</li></a>
               <a href="/notes" style={{ textDecoration: 'none' }}><li>Notes</li></a>
               <a href="/contact" style={{ textDecoration: 'none' }}><li>Contact</li></a>
+              <a href="/diagnosis" style={{ textDecoration: 'none' }}>
+  <li>Try AI Diagnosis</li>
+</a>
             </ul>
           </nav>
           <div className="search-bar">

@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
   var carouselElement = document.querySelector("#carouselExampleControls");
 
-  var carousel = new bootstrap.Carousel(carouselElement, {
-    interval: 5000,
-    wrap: true,
-  });
+  if (carouselElement && typeof bootstrap !== "undefined") {
+    new bootstrap.Carousel(carouselElement, {
+      interval: 5000,
+      wrap: true,
+    });
+  }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -37,49 +39,49 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const deleteForms = document.querySelectorAll('form[action^="/delete-note"]');
+// document.addEventListener("DOMContentLoaded", () => {
+//   const deleteForms = document.querySelectorAll('form[action^="/delete-note"]');
 
-  deleteForms.forEach((form) => {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const action = form.getAttribute("action");
+//   deleteForms.forEach((form) => {
+//     form.addEventListener("submit", async (e) => {
+//       e.preventDefault();
+//       const action = form.getAttribute("action");
 
-      try {
-        const response = await fetch(action, { method: "POST" });
-        const result = await response.json();
+//       try {
+//         const response = await fetch(action, { method: "POST" });
+//         const result = await response.json();
 
-        if (result.success) {
-          location.replace("/notes");
-        }
-      } catch (err) {
-        console.error("Error:", err);
-      }
-    });
-  });
-});
+//         if (result.success) {
+//           location.replace("/notes");
+//         }
+//       } catch (err) {
+//         console.error("Error:", err);
+//       }
+//     });
+//   });
+// });
 const chatbotIcon = document.getElementById("chatbotIcon");
 const chatbotBox = document.getElementById("chatbotBox");
 const chatInput = document.getElementById("chatInput");
 const chatMessages = document.getElementById("chatMessages");
 const sendBtn = document.getElementById("sendBtn");
 
-/* 🔘 Chatbot open / close */
-chatbotIcon.addEventListener("click", () => {
-  if (chatbotBox.style.display === "flex") {
-    chatbotBox.style.display = "none";
-  } else {
-    chatbotBox.style.display = "flex";
-  }
-});
+if (chatbotIcon && chatbotBox) {
+  chatbotIcon.addEventListener("click", () => {
+    chatbotBox.style.display =
+      chatbotBox.style.display === "flex" ? "none" : "flex";
+  });
+}
 
-/* 🔘 Send button */
-sendBtn.addEventListener("click", sendMessage);
+if (sendBtn) {
+  sendBtn.addEventListener("click", sendMessage);
+}
 
-/* ⌨️ Enter key */
-chatInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
+if (chatInput) {
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+}
 
 async function sendMessage() {
   const message = chatInput.value.trim();
@@ -115,3 +117,107 @@ async function sendMessage() {
 
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
+
+let selectedAge = "";
+
+function selectAge(age, element) {
+  selectedAge = age;
+
+  // sab cards reset
+  document.querySelectorAll(".card").forEach(c => {
+    c.classList.remove("active");
+    const tick = c.querySelector(".tick");
+    if (tick) tick.remove();
+  });
+
+  // selected card highlight
+  element.classList.add("active");
+
+  // ✅ tick icon add karo
+  const tick = document.createElement("div");
+  tick.className = "tick";
+  tick.innerHTML = "✔";
+  element.appendChild(tick);
+}
+async function getDiagnosis() {
+  const problem = document.getElementById("problem").value;
+  const ageGroup = selectedAge;
+
+  if (!problem || !ageGroup) {
+    alert("Please enter problem and select age group");
+    return;
+  }
+
+  const res = await fetch("/diagnose", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ problem, ageGroup }),
+  });
+
+  const data = await res.json();
+
+  let html = "<h2>🌿 Remedies:</h2>";
+
+  if (!data.remedies || data.remedies.length === 0) {
+    html += "<p>No remedies found 😓</p>";
+  } else {
+    data.remedies.forEach((r) => {
+      html += `
+        <div class="result-card">
+          <h3>${r.plant}</h3>
+          <p><b>Method:</b> ${r.method}</p>
+          <p><b>Time:</b> ${r.time}</p>
+          <p><b>Dosage:</b> ${r.dosage}</p>
+          <p><b>Benefit:</b> ${r.benefit}</p>
+
+          <h4>Steps:</h4>
+          <ul>
+            ${(r.steps || []).map(s => `<li>${s}</li>`).join("")}
+          </ul>
+        </div>
+      `;
+    });
+  }
+
+  document.getElementById("result").innerHTML = html;
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const cards = document.querySelectorAll(".card");
+  const btn = document.getElementById("diagnosisBtn");
+
+  // 🔥 CARD CLICK
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+
+      selectedAge = card.dataset.age;
+
+      // reset
+      cards.forEach(c => {
+        c.classList.remove("active");
+        const tick = c.querySelector(".tick");
+        if (tick) tick.remove();
+      });
+
+      // active
+      card.classList.add("active");
+
+      // tick
+      const tick = document.createElement("div");
+      tick.className = "tick";
+      tick.innerHTML = "✔";
+      card.appendChild(tick);
+    });
+  });
+
+  // 🔥 BUTTON CLICK
+  if (btn) {
+    btn.addEventListener("click", getDiagnosis);
+  }
+
+});

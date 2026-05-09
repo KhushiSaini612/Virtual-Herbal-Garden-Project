@@ -19,7 +19,7 @@ app.use(session({
 
 const router = express.Router();
 
-const { LogInCollection, Movie, Plant ,User, Contact} = require('./mongo');
+const { LogInCollection, Movie, Plant ,User, Contact, HerbalPlan} = require('./mongo');
 const { error } = require("console");
 const port = process.env.PORT || 3000
 app.use(express.json())
@@ -448,6 +448,79 @@ Sawaal: ${userMessage}`
   } catch (error) {
     console.error("Chatbot error:", error.message);
     res.json({ reply: "Server is currently busy 😓 Please wait for some time" });
+  }
+});
+
+app.get("/diagnosis", async (req, res) => {
+  try {
+    const problems = await HerbalPlan.distinct("problem");
+    res.render("diagnosis", { problems });
+  } catch (err) {
+    console.error(err);
+    res.render("diagnosis", { problems: [] });
+  }
+});
+
+app.post("/diagnose", async (req, res) => {
+  try {
+    const { problem, ageGroup } = req.body;
+
+    if (!problem || !ageGroup) {
+      return res.status(400).json({ error: "Problem and ageGroup required" });
+    }
+
+    // 🔍 find plan
+    const plan = await HerbalPlan.findOne({
+  problem: new RegExp(problem, "i"),
+  ageGroup: new RegExp(ageGroup, "i")
+});
+
+    if (!plan) {
+      return res.json({
+        message: "No exact plan found, showing general remedies",
+        remedies: []
+      });
+    }
+
+    // 🔥 Plant ke steps bhi attach karenge
+    const enrichedRemedies = [];
+
+    for (let remedy of plan.remedies) {
+      const plant = await Plant.findOne({ name: remedy.plant });
+
+      let steps = [];
+
+// 🔥 priority 1: Plant DB se steps
+if (plant) {
+  const methodMatch = plant.practicalUses.find(
+    (u) => u.method.toLowerCase() === remedy.method.toLowerCase()
+  );
+
+  if (methodMatch && methodMatch.steps && methodMatch.steps.length > 0) {
+    steps = methodMatch.steps;
+  }
+}
+
+// 🔥 priority 2: agar upar se nahi mila → seed plan se
+if (!steps || steps.length === 0) {
+  steps = remedy.steps || [];
+}
+
+      enrichedRemedies.push({
+        ...remedy._doc,
+        steps
+      });
+    }
+
+    res.json({
+      problem,
+      ageGroup,
+      remedies: enrichedRemedies
+    });
+
+  } catch (error) {
+    console.error("Diagnosis error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
