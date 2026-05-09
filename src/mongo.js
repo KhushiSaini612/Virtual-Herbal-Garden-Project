@@ -142,11 +142,61 @@ const herbalPlanSchema = new mongoose.Schema({
 
 const HerbalPlan = mongoose.model("HerbalPlan", herbalPlanSchema);
 
+const plantDiseaseSchema = new mongoose.Schema({
+  plantName: {
+    type: String,
+    required: true
+  },
+
+  diseaseName: {
+    type: String,
+    required: true
+  },
+
+  symptoms: [
+    {
+      type: String
+    }
+  ],
+
+  causes: [
+    {
+      type: String
+    }
+  ],
+
+  treatments: [
+    {
+      type: String
+    }
+  ],
+
+  prevention: [
+    {
+      type: String
+    }
+  ],
+
+  severity: {
+    type: String
+  },
+
+  imageUrl: {
+    type: String
+  }
+});
+
+const PlantDisease = mongoose.model(
+  "PlantDisease",
+  plantDiseaseSchema
+);
+
   module.exports = {
     LogInCollection,
     Plant,
     Contact,
-    HerbalPlan
+    HerbalPlan,
+    PlantDisease
   };
 
 

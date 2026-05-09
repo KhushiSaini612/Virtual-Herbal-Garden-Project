@@ -1,4 +1,6 @@
-
+const multer = require("multer");
+const { spawn } = require("child_process");
+const fs = require("fs");
 const express = require("express")
 const path = require("path")
 require("dotenv").config();
@@ -16,10 +18,21 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false } 
 }));
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/");
+  },
+
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
 
 const router = express.Router();
 
-const { LogInCollection, Movie, Plant ,User, Contact, HerbalPlan} = require('./mongo');
+const { LogInCollection, Movie, Plant ,User, Contact, HerbalPlan, PlantDisease} = require('./mongo');
 const { error } = require("console");
 const port = process.env.PORT || 3000
 app.use(express.json())
@@ -524,6 +537,252 @@ if (!steps || steps.length === 0) {
   }
 });
 
+app.get("/plant-doctor", (req, res) => {
+
+  res.render("plantDoctor");
+
+});
+
+app.post(
+  "/predict-plant",
+  upload.single("plantImage"),
+
+  async (req, res) => {
+
+    try {
+
+      if (!req.file) {
+        return res.send("No file uploaded");
+      }
+
+      const imagePath = path.join(
+        __dirname,
+        "../",
+        req.file.path
+      );
+
+      console.log("IMAGE PATH:", imagePath);
+
+      const pythonProcess = spawn(
+        "python",
+        ["ml/predict.py", imagePath],
+        {
+          cwd: path.join(__dirname, "..")
+        }
+      );
+
+      let result = "";
+      let errorOutput = "";
+
+      pythonProcess.stdout.on(
+        "data",
+        (data) => {
+
+          const text = data.toString();
+
+          console.log("STDOUT:", text);
+
+          result += text;
+
+        }
+      );
+
+      pythonProcess.stderr.on(
+        "data",
+        (data) => {
+
+          const text = data.toString();
+
+          console.log("STDERR:", text);
+
+          errorOutput += text;
+
+        }
+      );
+
+      pythonProcess.on(
+        "close",
+
+        async (code) => {
+
+          console.log("Python exited with code:", code);
+
+          console.log("FULL RESULT:\n", result);
+
+          if (code !== 0) {
+
+            return res.send(
+              "Python Prediction Failed"
+            );
+
+          }
+
+          let detectedPlant = "Unknown";
+
+          const output =
+            result.toLowerCase();
+
+          if (
+            output.includes("tulsi") ||
+            output.includes("tulasi")
+          ) {
+
+            detectedPlant = "Tulsi";
+
+          }
+
+          else if (
+            output.includes("neem")
+          ) {
+
+            detectedPlant = "Neem";
+
+          }
+
+          else if (
+            output.includes("aloevera") ||
+            output.includes("aloe")
+          ) {
+
+            detectedPlant = "Aloe Vera";
+
+          }
+
+          else if (
+            output.includes("brahmi") ||
+            output.includes("bhrami")
+          ) {
+
+            detectedPlant = "Brahmi";
+
+          }
+
+          const diseases =
+            await PlantDisease.find({
+              plantName: detectedPlant
+            });
+
+          res.render(
+  "plantResult",
+  {
+    plant: detectedPlant,
+
+    image:
+      "/" +
+      req.file.path.replace(
+        /\\/g,
+        "/"
+      ),
+
+    diseases,
+
+    diagnosis: null,
+
+    selectedSymptoms: []
+  }
+);
+
+        }
+      );
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+      res.send("Prediction Error");
+
+    }
+
+  }
+);
+
+app.post(
+  "/final-diagnosis",
+
+  async (req, res) => {
+
+    try {
+
+      const {
+        plant,
+        symptoms,
+        image
+      } = req.body;
+
+      const selectedSymptoms =
+        Array.isArray(symptoms)
+          ? symptoms
+          : [symptoms];
+
+      const diseases =
+        await PlantDisease.find({
+          plantName: plant
+        });
+
+      let matchedDiseases = [];
+
+      for (let disease of diseases) {
+
+        let matchedCount = 0;
+
+        disease.symptoms.forEach((symptom) => {
+
+          if (
+            selectedSymptoms.includes(symptom)
+          ) {
+
+            matchedCount++;
+
+          }
+
+        });
+
+        // agar 1 bhi symptom match hua
+        if (matchedCount > 0) {
+
+          matchedDiseases.push(disease);
+
+        }
+
+      }
+
+      if (matchedDiseases.length === 0) {
+
+        return res.send(
+          "No disease matched"
+        );
+
+      }
+
+      res.render(
+  "plantResult",
+  {
+    plant,
+
+    image,
+
+    diseases,
+
+    diagnosis: matchedDiseases,
+
+    selectedSymptoms
+  }
+);
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.send(
+        "Diagnosis Error"
+      );
+
+    }
+
+  }
+);
 app.listen(3000, () => {
     console.log('port connected');
 })
