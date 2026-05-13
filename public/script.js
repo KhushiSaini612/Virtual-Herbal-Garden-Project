@@ -89,33 +89,76 @@ async function sendMessage() {
 
   /* 👤 User message */
   chatMessages.innerHTML += `
-    <div>
-      <span><b>You:</b></span> ${message}
-    </div>
-  `;
+  <div class="user-message">
+    ${message}
+  </div>
+`;
 
   chatInput.value = "";
 
-  /* 🤖 API call */
-  const response = await fetch("/chatbot", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ message })
-  });
+   /* 🔥 Typing indicator add */
+  const typingId = "typing-" + Date.now();
 
-  const data = await response.json();
-
-  /* 🤖 Bot reply */
   chatMessages.innerHTML += `
-    <div class="bot-message">
-    <span><b>🌿 Bot:</b></span>
-    <div class="bot-text">${marked.parse(data.reply)}</div>
-  </div>
+    <div class="bot-message typing" id="${typingId}">
+      <span><b>🌿 Bot:</b></span>
+      <div class="typing-dots">
+        <span>.</span>
+        <span>.</span>
+        <span>.</span>
+      </div>
+    </div>
   `;
 
   chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  try {
+
+    /* 🤖 API call */
+    const response = await fetch("/chatbot", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await response.json();
+
+    /* 🔥 remove typing indicator */
+    const typingElement = document.getElementById(typingId);
+
+    if (typingElement) {
+      typingElement.remove();
+    }
+
+    /* 🤖 Bot reply */
+    chatMessages.innerHTML += `
+      <div class="bot-message">
+        <span><b>🌿 Bot:</b></span>
+        <div class="bot-text">${marked.parse(data.reply)}</div>
+      </div>
+    `;
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  } catch (error) {
+
+    const typingElement = document.getElementById(typingId);
+
+    if (typingElement) {
+      typingElement.remove();
+    }
+
+    chatMessages.innerHTML += `
+      <div class="bot-message">
+        <span><b>🌿 Bot:</b></span>
+        <div class="bot-text">
+          Server busy 😓 Try again later.
+        </div>
+      </div>
+    `;
+  }
 }
 
 

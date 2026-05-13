@@ -60,7 +60,7 @@ function Contact() {
         </div>
 
         <footer className="mt-5">
-          <p>© 2024 Virtual Herbal Garden</p>
+          <p>© 2026 Virtual Herbal Garden</p>
         </footer>
       </body>
     </html>

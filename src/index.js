@@ -389,9 +389,7 @@ let plants = await Plant.find({
     { commonNames: { $in: words.map(w => new RegExp(w, "i")) } }
   ]
 });
-    if (plants.length === 0) {
-      plants = await Plant.find({}).limit(3);
-    }
+    
 
     const context = plants.map((p) => `
 Plant Name: ${p.name}

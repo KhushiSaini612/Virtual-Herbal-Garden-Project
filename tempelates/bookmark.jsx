@@ -53,7 +53,7 @@ function Bookmark(props) {
         </div>
 
         <footer style={{ position: 'fixed', bottom: 0, width: '100%' }}>
-          <p>© 2024 Virtual Herbal Garden</p>
+          <p>© 2026 Virtual Herbal Garden</p>
         </footer>
 
         <script src="script.js"></script>
