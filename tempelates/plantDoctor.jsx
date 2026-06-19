@@ -138,7 +138,7 @@ function PlantDoctor() {
             <div className="spinner"></div>
 
             <h2>
-              🌿 Detecting Plant Disease...
+              🌿 Detecting Plant...
             </h2>
 
             <p>

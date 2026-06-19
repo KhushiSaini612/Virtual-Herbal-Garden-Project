@@ -248,7 +248,7 @@ const samplePlants = [
       "Antimicrobial",
     ],
     imageUrl:
-      "https://thenurserywala.com/wp-content/uploads/2025/07/ChatGPT-Image-Aug-26-2025-08_03_23-PM.png",
+      "https://mybageecha.com/cdn/shop/products/Azadirachta_indica.jpg?v=1571438650",
     modelUrl: "/models/neem_tree/scene.gltf",
     habitat: {
       nativeRegion: "Indian subcontinent and tropical regions",

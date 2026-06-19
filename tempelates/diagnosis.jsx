@@ -14,10 +14,10 @@ function Diagnosis({ problems = [] }) {
 
         <div className="container">
 
-          <h1 className="title">🌿 AI Herbal Diagnosis</h1>
+          <h1 className="title">🌿 Herbal Diagnosis</h1>
           <p className="subtitle">Select your problem & age group</p>
 
-          {/* 🔥 DROPDOWN */}
+          {/* DROPDOWN */}
           <div className="input-box">
             <select id="problem" className="dropdown">
               <option value="">-- Select Problem --</option>

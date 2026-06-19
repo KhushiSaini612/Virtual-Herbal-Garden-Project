@@ -23,7 +23,7 @@ h1 { text-align: center; font-size: 3rem; color: white; margin-top: 20px; }
   margin: 20px auto; 
   display: flex; 
   gap: 30px; 
-  align-items: stretch; /* 🔥 MAIN FIX */
+  align-items: stretch; /* MAIN FIX */
 }
 
 /* LEFT SIDE */
@@ -36,8 +36,8 @@ h1 { text-align: center; font-size: 3rem; color: white; margin-top: 20px; }
 /* IMAGE FULL HEIGHT */
 .plant-info img { 
   width: 100%;
-  height: 100%;        /* 🔥 */
-  object-fit: cover;   /* 🔥 distortion fix */
+  height: 100%;        /*  */
+  object-fit: cover;   /* distortion fix */
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }

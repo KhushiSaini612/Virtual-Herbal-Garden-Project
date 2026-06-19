@@ -39,27 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// document.addEventListener("DOMContentLoaded", () => {
-//   const deleteForms = document.querySelectorAll('form[action^="/delete-note"]');
 
-//   deleteForms.forEach((form) => {
-//     form.addEventListener("submit", async (e) => {
-//       e.preventDefault();
-//       const action = form.getAttribute("action");
-
-//       try {
-//         const response = await fetch(action, { method: "POST" });
-//         const result = await response.json();
-
-//         if (result.success) {
-//           location.replace("/notes");
-//         }
-//       } catch (err) {
-//         console.error("Error:", err);
-//       }
-//     });
-//   });
-// });
 const chatbotIcon = document.getElementById("chatbotIcon");
 const chatbotBox = document.getElementById("chatbotBox");
 const chatInput = document.getElementById("chatInput");
@@ -96,7 +76,7 @@ async function sendMessage() {
 
   chatInput.value = "";
 
-   /* 🔥 Typing indicator add */
+   /* Typing indicator add */
   const typingId = "typing-" + Date.now();
 
   chatMessages.innerHTML += `
@@ -114,7 +94,7 @@ async function sendMessage() {
 
   try {
 
-    /* 🤖 API call */
+    /*  API call */
     const response = await fetch("/chatbot", {
       method: "POST",
       headers: {
@@ -125,14 +105,14 @@ async function sendMessage() {
 
     const data = await response.json();
 
-    /* 🔥 remove typing indicator */
+    /*  remove typing indicator */
     const typingElement = document.getElementById(typingId);
 
     if (typingElement) {
       typingElement.remove();
     }
 
-    /* 🤖 Bot reply */
+    /*  Bot reply */
     chatMessages.innerHTML += `
       <div class="bot-message">
         <span><b>🌿 Bot:</b></span>
@@ -167,7 +147,7 @@ let selectedAge = "";
 function selectAge(age, element) {
   selectedAge = age;
 
-  // sab cards reset
+  // cards reset
   document.querySelectorAll(".card").forEach(c => {
     c.classList.remove("active");
     const tick = c.querySelector(".tick");
@@ -177,7 +157,7 @@ function selectAge(age, element) {
   // selected card highlight
   element.classList.add("active");
 
-  // ✅ tick icon add karo
+  //  tick icon
   const tick = document.createElement("div");
   tick.className = "tick";
   tick.innerHTML = "✔";
@@ -234,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const cards = document.querySelectorAll(".card");
   const btn = document.getElementById("diagnosisBtn");
 
-  // 🔥 CARD CLICK
+  // CARD CLICK
   cards.forEach(card => {
     card.addEventListener("click", () => {
 
@@ -258,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 🔥 BUTTON CLICK
+  // BUTTON CLICK
   if (btn) {
     btn.addEventListener("click", getDiagnosis);
   }

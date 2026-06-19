@@ -166,7 +166,7 @@ const plans = [
   // ================= FEVER =================
   // ================= FEVER =================
 
-// 👶 CHILD
+//  CHILD
 {
   problem: "fever",
   ageGroup: "child",
@@ -199,7 +199,7 @@ const plans = [
   ]
 },
 
-// 🧑 ADULT (already hai but clean version de raha hoon)
+//  ADULT (already)
 {
   problem: "fever",
   ageGroup: "adult",
@@ -229,7 +229,7 @@ const plans = [
   ]
 },
 
-// 👴 OLD
+//  OLD
 {
   problem: "fever",
   ageGroup: "old",
@@ -352,7 +352,7 @@ const plans = [
   // ================= ACNE =================
   // ================= ACNE =================
 
-// 👶 CHILD
+//  CHILD
 {
   problem: "acne",
   ageGroup: "child",
@@ -387,7 +387,7 @@ const plans = [
   ]
 },
 
-// 🧑 ADULT
+//  ADULT
 {
   problem: "acne",
   ageGroup: "adult",
@@ -436,7 +436,7 @@ const plans = [
   ]
 },
 
-// 👴 OLD
+//  OLD
 {
   problem: "acne",
   ageGroup: "old",
@@ -472,7 +472,7 @@ const plans = [
   // ================= HAIR FALL =================
   // ================= HAIR FALL =================
 
-// 👶 CHILD
+//  CHILD
 {
   problem: "hair fall",
   ageGroup: "child",
@@ -507,7 +507,7 @@ const plans = [
   ]
 },
 
-// 🧑 ADULT
+//  ADULT
 {
   problem: "hair fall",
   ageGroup: "adult",
@@ -556,7 +556,7 @@ const plans = [
   ]
 },
 
-// 👴 OLD
+//  OLD
 {
   problem: "hair fall",
   ageGroup: "old",
@@ -593,7 +593,7 @@ const plans = [
   // ================= IMMUNITY =================
  // ================= LOW IMMUNITY =================
 
-// 👶 CHILD
+//  CHILD
 {
   problem: "low immunity",
   ageGroup: "child",
@@ -637,7 +637,7 @@ const plans = [
   ]
 },
 
-// 🧑 ADULT
+//  ADULT
 {
   problem: "low immunity",
   ageGroup: "adult",
@@ -695,7 +695,7 @@ const plans = [
   ]
 },
 
-// 👴 OLD
+//  OLD
 {
   problem: "low immunity",
   ageGroup: "old",

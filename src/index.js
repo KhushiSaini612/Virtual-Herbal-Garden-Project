@@ -1,23 +1,25 @@
 const multer = require("multer");
 const { spawn } = require("child_process");
 const fs = require("fs");
-const express = require("express")
-const path = require("path")
+const express = require("express");
+const path = require("path");
 require("dotenv").config();
-require('@babel/register')({
-  presets: ['@babel/preset-react']
+require("@babel/register")({
+  presets: ["@babel/preset-react"],
 });
 
-const app = express()
-const session = require('express-session');
-const reactViews = require('express-react-views');
+const app = express();
+const session = require("express-session");
+const reactViews = require("express-react-views");
 
-app.use(session({
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false } 
-}));
+app.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
+  }),
+);
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "public/uploads/");
@@ -25,357 +27,347 @@ const storage = multer.diskStorage({
 
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
-  }
+  },
 });
 
 const upload = multer({ storage });
 
 const router = express.Router();
 
-const { LogInCollection, Movie, Plant ,User, Contact, HerbalPlan, PlantDisease} = require('./mongo');
+const {
+  LogInCollection,
+  Movie,
+  Plant,
+  User,
+  Contact,
+  HerbalPlan,
+  PlantDisease,
+} = require("./mongo");
 const { error } = require("console");
-const port = process.env.PORT || 3000
-app.use(express.json())
+const port = process.env.PORT || 3000;
+app.use(express.json());
 
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({ extended: false }));
 
-const tempelatePath = path.join(__dirname, '../tempelates')
-const publicPath = path.join(__dirname, '../public')
+const tempelatePath = path.join(__dirname, "../tempelates");
+const publicPath = path.join(__dirname, "../public");
 console.log(publicPath);
 
-app.engine('jsx', reactViews.createEngine())
-app.set('view engine', 'jsx')
-app.set('views', tempelatePath)
-app.use(express.static(publicPath))
+app.engine("jsx", reactViews.createEngine());
+app.set("view engine", "jsx");
+app.set("views", tempelatePath);
+app.use(express.static(publicPath));
 
-
-
-app.get('/signup', (req, res) => {
-    res.render('signup')
-})
-app.get('/', (req, res) => {
-    res.render('login')
-})
-app.get('/login', (req, res) => {
-  res.render('login');
+app.get("/signup", (req, res) => {
+  res.render("signup");
+});
+app.get("/", (req, res) => {
+  res.render("login");
+});
+app.get("/login", (req, res) => {
+  res.render("login");
 });
 
-
-app.post('/signup', async (req, res) => {
-    try {
-        const usernameCheck = await LogInCollection.findOne({ name: req.body.name });
-
-        if (usernameCheck) {
-            
-            return res.render('signup', { errorMessage: "Username already taken, please choose another." });
-        }
-        const data = {
-            name: req.body.name,
-            
-            password: req.body.password,
-            bookmarks: [] 
-        };
-
-        await LogInCollection.create(data);
-        return res.status(201).render('login', { successMessage: "Signup successful! Please log in." });
-        
-    } catch (err) {
-      console.error("Signup Error:", err); 
-        return res.render("signup", { errorMessage: "Something went wrong, please try again." });
-    }
-});
-
-
-
-app.post('/login', async (req, res) => {
+app.post("/signup", async (req, res) => {
   try {
-      const user = await LogInCollection.findOne({ name: req.body.name }); 
+    const usernameCheck = await LogInCollection.findOne({
+      name: req.body.name,
+    });
 
-      if (user && user.password === req.body.password) { 
-          req.session.userId = user._id; 
-          return res.redirect('/home');
-      } else {
-          res.render("login", { errorMessage: "Incorrect password or username. Please try again." });
-      }
-  } catch (e) {
-      console.error('Error logging in:', e); 
-      res.render("login", { errorMessage: "User not found or wrong details." });
-  }
-});
-
-
-
-app.get('/plants/:plantName', async (req, res) => {
-    try {
-      const plantName = req.params.plantName;
-      console.log('Searching for plant:', plantName);
-      const baseUrl = `${req.protocol}://${req.get('host')}/plants/${plantName}`; 
-  
-      const plant = await Plant.findOne({ name: plantName });
-      
-      if (!plant) {
-        console.log('Plant not found in database');
-        return res.status(404).send("Plant not found");
-      }
-      
-      console.log('Plant found:', plant);
-      res.render('plants', { plant });
-       
-    } catch (err) {
-      console.error('Error fetching plant details:', err); 
-      res.status(500).send("Error fetching plant details");
-    }
-  });
-
-
-  app.get('/debug/plants', async (req, res) => {
-    try {
-      const plants = await Plant.find({}, 'name');
-      res.json(plants);
-    } catch (err) {
-      res.status(500).json({ error: 'Error fetching plants' });
-    }
-  });
-
-
-app.get('/search', async (req, res) => {
-    try {
-      const searchQuery = req.query.query;
-      const searchResults = await Plant.find({
-        name: { $regex: new RegExp(searchQuery, 'i') }
+    if (usernameCheck) {
+      return res.render("signup", {
+        errorMessage: "Username already taken, please choose another.",
       });
-  
-      res.render('home', { searchResults });
-    } catch (err) {
-      console.error('Error searching for plants:', err);
-      res.status(500).send("Error searching for plants");
     }
-  });
-  
+    const data = {
+      name: req.body.name,
 
-app.get('/category/:categoryName', async (req, res) => {
-  try {
-      const categoryName = req.params.categoryName;
-      const plants = await Plant.find({ category: categoryName });
+      password: req.body.password,
+      bookmarks: [],
+    };
 
-      if (!plants || plants.length === 0) {
-          return res.status(404).render('home', { errorMessage: `No plants found for the category ${categoryName}` });
-      }
-      res.render('home', { searchResultss: plants });
+    await LogInCollection.create(data);
+    return res
+      .status(201)
+      .render("login", { successMessage: "Signup successful! Please log in." });
   } catch (err) {
-      console.error('Error fetching plants by category:', err);
-      res.status(500).send("Error fetching plants by category");
+    console.error("Signup Error:", err);
+    return res.render("signup", {
+      errorMessage: "Something went wrong, please try again.",
+    });
   }
 });
 
+app.post("/login", async (req, res) => {
+  try {
+    const user = await LogInCollection.findOne({ name: req.body.name });
 
+    if (user && user.password === req.body.password) {
+      req.session.userId = user._id;
+      return res.redirect("/home");
+    } else {
+      res.render("login", {
+        errorMessage: "Incorrect password or username. Please try again.",
+      });
+    }
+  } catch (e) {
+    console.error("Error logging in:", e);
+    res.render("login", { errorMessage: "User not found or wrong details." });
+  }
+});
+
+app.get("/plants/:plantName", async (req, res) => {
+  try {
+    const plantName = req.params.plantName;
+    console.log("Searching for plant:", plantName);
+    const baseUrl = `${req.protocol}://${req.get("host")}/plants/${plantName}`;
+
+    const plant = await Plant.findOne({ name: plantName });
+
+    if (!plant) {
+      console.log("Plant not found in database");
+      return res.status(404).send("Plant not found");
+    }
+
+    console.log("Plant found:", plant);
+    res.render("plants", { plant });
+  } catch (err) {
+    console.error("Error fetching plant details:", err);
+    res.status(500).send("Error fetching plant details");
+  }
+});
+
+app.get("/debug/plants", async (req, res) => {
+  try {
+    const plants = await Plant.find({}, "name");
+    res.json(plants);
+  } catch (err) {
+    res.status(500).json({ error: "Error fetching plants" });
+  }
+});
+
+app.get("/search", async (req, res) => {
+  try {
+    const searchQuery = req.query.query;
+    const searchResults = await Plant.find({
+      name: { $regex: new RegExp(searchQuery, "i") },
+    });
+
+    res.render("home", { searchResults });
+  } catch (err) {
+    console.error("Error searching for plants:", err);
+    res.status(500).send("Error searching for plants");
+  }
+});
+
+app.get("/category/:categoryName", async (req, res) => {
+  try {
+    const categoryName = req.params.categoryName;
+    const plants = await Plant.find({ category: categoryName });
+
+    if (!plants || plants.length === 0) {
+      return res
+        .status(404)
+        .render("home", {
+          errorMessage: `No plants found for the category ${categoryName}`,
+        });
+    }
+    res.render("home", { searchResultss: plants });
+  } catch (err) {
+    console.error("Error fetching plants by category:", err);
+    res.status(500).send("Error fetching plants by category");
+  }
+});
 
 function requireLogin(req, res, next) {
   if (!req.session.userId) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
   next();
 }
 
-app.post('/add-to-bookmarks/:plantId', async (req, res) => {
+app.post("/add-to-bookmarks/:plantId", async (req, res) => {
   const { plantId } = req.params;
   const userId = req.session.userId;
 
   if (!userId) {
-    return res.status(401).json({ success: false, error: 'User not logged in' });
+    return res
+      .status(401)
+      .json({ success: false, error: "User not logged in" });
   }
 
   try {
     const user = await LogInCollection.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
+      return res.status(404).json({ success: false, error: "User not found" });
     }
 
- 
     if (user.bookmarks.includes(plantId)) {
       console.log("Already bookmarked → sending error response");
-      return res.json({ success: false, error: 'Plant is already bookmarked' });
+      return res.json({ success: false, error: "Plant is already bookmarked" });
     }
 
     user.bookmarks.push(plantId);
     await user.save();
 
     console.log("New bookmark added → sending success response");
-    return res.json({ success: true, message: 'Plant added to bookmarks' });
+    return res.json({ success: true, message: "Plant added to bookmarks" });
   } catch (error) {
-    console.error('Error adding to bookmarks:', error);
-    res.status(500).json({ success: false, error: 'Something went wrong' });
+    console.error("Error adding to bookmarks:", error);
+    res.status(500).json({ success: false, error: "Something went wrong" });
   }
 });
 
-
-
-app.post('/remove-bookmark/:plantId', async (req, res) => {
+app.post("/remove-bookmark/:plantId", async (req, res) => {
   const { plantId } = req.params;
   const userId = req.session.userId;
 
   if (!userId) {
-    return res.status(401).json({ success: false, error: 'User not logged in' });
+    return res
+      .status(401)
+      .json({ success: false, error: "User not logged in" });
   }
 
   try {
-    
     await LogInCollection.updateOne(
       { _id: userId },
-      { $pull: { bookmarks: plantId } }
+      { $pull: { bookmarks: plantId } },
     );
 
-  
-    res.status(303).redirect('/bookmarks');
+    res.status(303).redirect("/bookmarks");
   } catch (error) {
-    console.error('Error removing bookmark:', error);
-    res.status(500).send('Something went wrong');
+    console.error("Error removing bookmark:", error);
+    res.status(500).send("Something went wrong");
   }
 });
 
-
-
-app.get('/bookmarks', async (req, res) => {
+app.get("/bookmarks", async (req, res) => {
   const userId = req.session.userId;
 
   if (!userId) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
 
   try {
-    const user = await LogInCollection.findById(userId).populate('bookmarks');
+    const user = await LogInCollection.findById(userId).populate("bookmarks");
     if (!user) {
-      return res.status(404).send('User not found');
+      return res.status(404).send("User not found");
     }
 
-    res.render('bookmark', { plants: user.bookmarks });
+    res.render("bookmark", { plants: user.bookmarks });
   } catch (error) {
-    console.error('Error fetching bookmarks:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error fetching bookmarks:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
-
-app.post('/notes', async (req, res) => {
+app.post("/notes", async (req, res) => {
   const userId = req.session.userId;
   const noteText = req.body.noteText;
 
   if (!userId) {
-    return res.status(401).json({ success: false, message: "You need to log in to save notes." });
+    return res
+      .status(401)
+      .json({ success: false, message: "You need to log in to save notes." });
   }
 
-  if (!noteText || noteText.trim() === '') {
-    return res.status(400).json({ success: false, message: "Note text cannot be empty." });
+  if (!noteText || noteText.trim() === "") {
+    return res
+      .status(400)
+      .json({ success: false, message: "Note text cannot be empty." });
   }
 
   try {
     const user = await LogInCollection.findById(userId);
-
 
     const newNote = { text: noteText.trim() };
 
     user.notes.push(newNote);
     await user.save();
-    res.status(303).redirect('/notes');
+    res.status(303).redirect("/notes");
   } catch (error) {
-    console.error('Error saving note:', error);
-    res.status(303).redirect('/notes');
-
+    console.error("Error saving note:", error);
+    res.status(303).redirect("/notes");
   }
 });
 
-
-
-
-app.get('/notes', async (req, res) => {
+app.get("/notes", async (req, res) => {
   const userId = req.session.userId;
 
   if (!userId) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
 
   try {
-   
     const user = await LogInCollection.findById(userId);
 
-   
-    res.render('notes', { notes: user.notes });
+    res.render("notes", { notes: user.notes });
   } catch (error) {
-    console.error('Error fetching notes:', error);
+    console.error("Error fetching notes:", error);
     res.status(500).send("Error fetching notes.");
   }
 });
 
-
-app.post('/delete-note/:noteId', async (req, res) => {
+app.post("/delete-note/:noteId", async (req, res) => {
   const userId = req.session.userId;
   const noteId = req.params.noteId;
 
   if (!userId) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
 
   try {
     await LogInCollection.updateOne(
       { _id: userId },
-      { $pull: { notes: { _id: noteId } } }
+      { $pull: { notes: { _id: noteId } } },
     );
-   
-    res.redirect('/notes');
+
+    res.redirect("/notes");
   } catch (error) {
     console.error("Delete error:", error);
-    res.redirect('/notes');
+    res.redirect("/notes");
   }
 });
 
-
-
-app.get('/home', async (req, res) => {
-  console.log('Home route accessed');
+app.get("/home", async (req, res) => {
+  console.log("Home route accessed");
   try {
-      
-      const plants = await Plant.find({});
-      
-      res.render('home', { plantsList: plants });
+    const plants = await Plant.find({});
+
+    res.render("home", { plantsList: plants });
   } catch (err) {
-      console.error('Error fetching plants:', err);
-      res.status(500).send("Error fetching plants from the database");
+    console.error("Error fetching plants:", err);
+    res.status(500).send("Error fetching plants from the database");
   }
 });
 
-
-app.get('/contact', (req, res) => {
-  if (!req.session.userId) return res.redirect('/login');
-  res.render('contact'); 
+app.get("/contact", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login");
+  res.render("contact");
 });
-app.post('/contact-submit', async (req, res) => {
+app.post("/contact-submit", async (req, res) => {
   const { name, email, message } = req.body;
 
-
   if (!name || !email || !message) {
-    return res.status(400).send('All fields are required!');
+    return res.status(400).send("All fields are required!");
   }
 
   try {
     const newContact = new Contact({
       name,
       email,
-      message
+      message,
     });
 
-    await newContact.save(); 
+    await newContact.save();
 
-    res.send('Thank you! Your message has been submitted successfully.');
+    res.send("Thank you! Your message has been submitted successfully.");
   } catch (error) {
-    console.error('Error saving contact info:', error);
-    res.status(500).send('Something went wrong. Please try again later.');
+    console.error("Error saving contact info:", error);
+    res.status(500).send("Something went wrong. Please try again later.");
   }
 });
-
-
-
-
 
 app.post("/chatbot", async (req, res) => {
   try {
@@ -383,15 +375,16 @@ app.post("/chatbot", async (req, res) => {
 
     const words = userMessage.split(" ");
 
-let plants = await Plant.find({
-  $or: [
-    { name: { $regex: userMessage, $options: "i" } },
-    { commonNames: { $in: words.map(w => new RegExp(w, "i")) } }
-  ]
-});
-    
+    let plants = await Plant.find({
+      $or: [
+        { name: { $regex: userMessage, $options: "i" } },
+        { commonNames: { $in: words.map((w) => new RegExp(w, "i")) } },
+      ],
+    });
 
-    const context = plants.map((p) => `
+    const context = plants
+      .map(
+        (p) => `
 Plant Name: ${p.name}
 Botanical Name: ${p.botanicalName}
 Common Names: ${p.commonNames?.join(", ")}
@@ -404,13 +397,17 @@ Habitat:
 Medicinal Uses:
 ${p.medicinalUses.map((m) => `- ${m.use}: ${m.description}`).join("\n")}
 Practical Uses:
-${p.practicalUses.map((u) => `
+${p.practicalUses
+  .map(
+    (u) => `
 Method: ${u.method}
 Steps:
 ${u.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
 Duration: ${u.duration}
 Benefits: ${u.benefits}
-`).join("\n")}
+`,
+  )
+  .join("\n")}
 Cultivation Details:
 Propagation: ${p.methodsOfCultivation?.propagation}
 
@@ -422,43 +419,52 @@ Planting:
 - Fertilization: ${p.methodsOfCultivation?.fertilization}
 - Pruning: ${p.methodsOfCultivation?.pruning}
 - Pests & Diseases: ${p.methodsOfCultivation?.pestsAndDiseases}
-`).join("\n");
+`,
+      )
+      .join("\n");
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",  // ✅ yeh current working model hai
-        max_tokens: 1024,
-        messages: [
-          {
-            role: "system",
-            content: "You are a smart herbal assistant. Answer in English. Be friendly. Always give step-by-step practical answers from given data. Do not say data is missing unless truly absent."
-          },
-          {
-            role: "user",
-            content: `Plant Data:
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile", 
+          max_tokens: 1024,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a smart herbal assistant. Answer in English. Be friendly. Always give step-by-step practical answers from given data. Do not say data is missing unless truly absent.",
+            },
+            {
+              role: "user",
+              content: `Plant Data:
 ${context}
 
-Sawaal: ${userMessage}`
-          }
-        ]
-      })
-    });
+Question: ${userMessage}`,
+            },
+          ],
+        }),
+      },
+    );
 
     const data = await response.json();
     console.log("Groq Status:", response.status);
     console.log("Groq Response:", JSON.stringify(data).slice(0, 200));
 
-    const botReply = data?.choices?.[0]?.message?.content || "Sorry, I didn't understand it 😊";
+    const botReply =
+      data?.choices?.[0]?.message?.content ||
+      "Sorry, I didn't understand it 😊";
     res.json({ reply: botReply });
-
   } catch (error) {
     console.error("Chatbot error:", error.message);
-    res.json({ reply: "Server is currently busy 😓 Please wait for some time" });
+    res.json({
+      reply: "Server is currently busy 😓 Please wait for some time",
+    });
   }
 });
 
@@ -480,20 +486,20 @@ app.post("/diagnose", async (req, res) => {
       return res.status(400).json({ error: "Problem and ageGroup required" });
     }
 
-    // 🔍 find plan
+    //  find plan
     const plan = await HerbalPlan.findOne({
-  problem: new RegExp(problem, "i"),
-  ageGroup: new RegExp(ageGroup, "i")
-});
+      problem: new RegExp(problem, "i"),
+      ageGroup: new RegExp(ageGroup, "i"),
+    });
 
     if (!plan) {
       return res.json({
         message: "No exact plan found, showing general remedies",
-        remedies: []
+        remedies: [],
       });
     }
 
-    // 🔥 Plant ke steps bhi attach karenge
+  
     const enrichedRemedies = [];
 
     for (let remedy of plan.remedies) {
@@ -501,34 +507,33 @@ app.post("/diagnose", async (req, res) => {
 
       let steps = [];
 
-// 🔥 priority 1: Plant DB se steps
-if (plant) {
-  const methodMatch = plant.practicalUses.find(
-    (u) => u.method.toLowerCase() === remedy.method.toLowerCase()
-  );
+      // priority 1: Plant DB steps
+      if (plant) {
+        const methodMatch = plant.practicalUses.find(
+          (u) => u.method.toLowerCase() === remedy.method.toLowerCase(),
+        );
 
-  if (methodMatch && methodMatch.steps && methodMatch.steps.length > 0) {
-    steps = methodMatch.steps;
-  }
-}
+        if (methodMatch && methodMatch.steps && methodMatch.steps.length > 0) {
+          steps = methodMatch.steps;
+        }
+      }
 
-// 🔥 priority 2: agar upar se nahi mila → seed plan se
-if (!steps || steps.length === 0) {
-  steps = remedy.steps || [];
-}
+      // priority 2:if not found → seed plan steps
+      if (!steps || steps.length === 0) {
+        steps = remedy.steps || [];
+      }
 
       enrichedRemedies.push({
         ...remedy._doc,
-        steps
+        steps,
       });
     }
 
     res.json({
       problem,
       ageGroup,
-      remedies: enrichedRemedies
+      remedies: enrichedRemedies,
     });
-
   } catch (error) {
     console.error("Diagnosis error:", error);
     res.status(500).json({ error: "Server error" });
@@ -536,9 +541,7 @@ if (!steps || steps.length === 0) {
 });
 
 app.get("/plant-doctor", (req, res) => {
-
   res.render("plantDoctor");
-
 });
 
 app.post(
@@ -546,241 +549,141 @@ app.post(
   upload.single("plantImage"),
 
   async (req, res) => {
-
     try {
-
       if (!req.file) {
         return res.send("No file uploaded");
       }
 
-      const imagePath = path.join(
-        __dirname,
-        "../",
-        req.file.path
-      );
+      const imagePath = path.join(__dirname, "../", req.file.path);
 
       console.log("IMAGE PATH:", imagePath);
 
-      const pythonProcess = spawn(
-        "python",
-        ["ml/predict.py", imagePath],
-        {
-          cwd: path.join(__dirname, "..")
-        }
-      );
+      const pythonProcess = spawn("python", ["ml/predict.py", imagePath], {
+        cwd: path.join(__dirname, ".."),
+      });
 
       let result = "";
       let errorOutput = "";
 
-      pythonProcess.stdout.on(
-        "data",
-        (data) => {
+      pythonProcess.stdout.on("data", (data) => {
+        const text = data.toString();
 
-          const text = data.toString();
+        console.log("STDOUT:", text);
 
-          console.log("STDOUT:", text);
+        result += text;
+      });
 
-          result += text;
+      pythonProcess.stderr.on("data", (data) => {
+        const text = data.toString();
 
-        }
-      );
+        console.log("STDERR:", text);
 
-      pythonProcess.stderr.on(
-        "data",
-        (data) => {
-
-          const text = data.toString();
-
-          console.log("STDERR:", text);
-
-          errorOutput += text;
-
-        }
-      );
+        errorOutput += text;
+      });
 
       pythonProcess.on(
         "close",
 
         async (code) => {
-
           console.log("Python exited with code:", code);
 
           console.log("FULL RESULT:\n", result);
 
           if (code !== 0) {
-
-            return res.send(
-              "Python Prediction Failed"
-            );
-
+            return res.send("Python Prediction Failed");
           }
 
           let detectedPlant = "Unknown";
 
-          const output =
-            result.toLowerCase();
+          const output = result.toLowerCase();
 
-          if (
-            output.includes("tulsi") ||
-            output.includes("tulasi")
-          ) {
-
+          if (output.includes("tulsi") || output.includes("tulasi")) {
             detectedPlant = "Tulsi";
-
-          }
-
-          else if (
-            output.includes("neem")
-          ) {
-
+          } else if (output.includes("neem")) {
             detectedPlant = "Neem";
-
-          }
-
-          else if (
-            output.includes("aloevera") ||
-            output.includes("aloe")
-          ) {
-
+          } else if (output.includes("aloevera") || output.includes("aloe")) {
             detectedPlant = "Aloe Vera";
-
-          }
-
-          else if (
-            output.includes("brahmi") ||
-            output.includes("bhrami")
-          ) {
-
+          } else if (output.includes("brahmi") || output.includes("bhrami")) {
             detectedPlant = "Brahmi";
-
           }
 
-          const diseases =
-            await PlantDisease.find({
-              plantName: detectedPlant
-            });
+          const diseases = await PlantDisease.find({
+            plantName: detectedPlant,
+          });
 
-          res.render(
-  "plantResult",
-  {
-    plant: detectedPlant,
+          res.render("plantResult", {
+            plant: detectedPlant,
 
-    image:
-      "/" +
-      req.file.path.replace(
-        /\\/g,
-        "/"
-      ),
+            image: "/" + req.file.path.replace(/\\/g, "/"),
 
-    diseases,
+            diseases,
 
-    diagnosis: null,
+            diagnosis: null,
 
-    selectedSymptoms: []
-  }
-);
-
-        }
+            selectedSymptoms: [],
+          });
+        },
       );
-
-    }
-
-    catch (err) {
-
+    } catch (err) {
       console.log(err);
 
       res.send("Prediction Error");
-
     }
-
-  }
+  },
 );
 
 app.post(
   "/final-diagnosis",
 
   async (req, res) => {
-
     try {
+      const { plant, symptoms, image } = req.body;
 
-      const {
-        plant,
-        symptoms,
-        image
-      } = req.body;
+      const selectedSymptoms = Array.isArray(symptoms) ? symptoms : [symptoms];
 
-      const selectedSymptoms =
-        Array.isArray(symptoms)
-          ? symptoms
-          : [symptoms];
-
-      const diseases =
-        await PlantDisease.find({
-          plantName: plant
-        });
+      const diseases = await PlantDisease.find({
+        plantName: plant,
+      });
 
       let matchedDiseases = [];
 
       for (let disease of diseases) {
-
         let matchedCount = 0;
 
         disease.symptoms.forEach((symptom) => {
-
-          if (
-            selectedSymptoms.includes(symptom)
-          ) {
-
+          if (selectedSymptoms.includes(symptom)) {
             matchedCount++;
-
           }
-
         });
 
-        // agar 1 bhi symptom match hua
+        // if any symptom matches
         if (matchedCount > 0) {
-
           matchedDiseases.push(disease);
-
         }
-
       }
 
       if (matchedDiseases.length === 0) {
-
-        return res.send(
-          "No disease matched"
-        );
-
+        return res.send("No disease matched");
       }
 
-      res.render(
-  "plantResult",
-  {
-    plant,
+      res.render("plantResult", {
+        plant,
 
-    image,
+        image,
 
-    diseases,
+        diseases,
 
-    diagnosis: matchedDiseases,
+        diagnosis: matchedDiseases,
 
-    selectedSymptoms
-  }
-);
-
+        selectedSymptoms,
+      });
     } catch (err) {
-
       console.log(err);
 
-      res.send(
-        "Diagnosis Error"
-      );
-
+      res.send("Diagnosis Error");
     }
-
-  }
+  },
 );
 app.listen(3000, () => {
-    console.log('port connected');
-})
+  console.log("port connected");
+});

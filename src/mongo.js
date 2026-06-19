@@ -99,7 +99,7 @@ const contactSchema = mongoose.Schema({
 });
 
 const Contact = mongoose.model('Contact', contactSchema);
-// Herbal Plan Schema (ADD THIS)
+// Herbal Plan Schema 
 
 const remedySchema = new mongoose.Schema({
   plant: {

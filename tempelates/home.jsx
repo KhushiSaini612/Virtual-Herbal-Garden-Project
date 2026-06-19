@@ -107,7 +107,7 @@ function Home(props) {
 
       <li>
         <i className="fas fa-microscope"></i>
-        Try AI Diagnosis
+        Try Herbal Diagnosis
       </li>
 
     </a>
@@ -333,7 +333,7 @@ function Home(props) {
         </div>
 
         <footer>
-          <p>© 2026 Virtual Herbal Garden</p>
+          <p>© 2026 Virtual Herbal Garden - Khushi Saini</p>
         </footer>
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
