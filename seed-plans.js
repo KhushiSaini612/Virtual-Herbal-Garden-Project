@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { HerbalPlan } = require("./src/mongo");
-
+require("dotenv").config();
 const plans = [
 
   // ================= COUGH =================
@@ -804,7 +804,7 @@ const plans = [
 async function seedPlans() {
   try {
     await mongoose.connect(
-      "mongodb+srv://sainikhushi007:FEcIKbrGLe8FDZ33@clustervhg.sy34kax.mongodb.net/Virtual_Herbal_Garden",
+      process.env.MONGO_URI,
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,

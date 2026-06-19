@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { PlantDisease } = require("./src/mongo");
-
+require("dotenv").config();
 const diseases = [
 
 {
@@ -273,9 +273,7 @@ async function seedDisease() {
 
   try {
 
-    await mongoose.connect(
-      "mongodb+srv://sainikhushi007:FEcIKbrGLe8FDZ33@clustervhg.sy34kax.mongodb.net/Virtual_Herbal_Garden"
-    );
+    await mongoose.connect(process.env.MONGO_URI);
 
     await PlantDisease.deleteMany({});
 

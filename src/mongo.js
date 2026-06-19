@@ -1,5 +1,6 @@
 const mongoose=require("mongoose")
-mongoose.connect("mongodb+srv://sainikhushi007:FEcIKbrGLe8FDZ33@clustervhg.sy34kax.mongodb.net/Virtual_Herbal_Garden")
+require("dotenv").config();
+mongoose.connect(process.env.MONGO_URI)
 
 .then(()=>{
     console.log('mongoose connected');
