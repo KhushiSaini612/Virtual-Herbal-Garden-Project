@@ -432,13 +432,26 @@ Planting:
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile", 
+          model: "openai/gpt-oss-120b", 
           max_tokens: 1024,
           messages: [
             {
               role: "system",
-              content:
-                "You are a smart herbal assistant. Answer in English. Be friendly. Always give step-by-step practical answers from given data. Do not say data is missing unless truly absent.",
+              content: `
+You are a herbal assistant.
+
+Rules:
+- Keep answers short and mobile-friendly.
+- Maximum 5-8 lines unless user asks for details.
+- Do not use tables.
+- Do not use markdown headings.
+- Do not write long introductions.
+- Give direct answers.
+- Use bullet points only when needed.
+- If user asks a simple question, answer in 2-4 sentences.
+- If user asks for cultivation, give only the most important points.
+- Be conversational and friendly.
+`
             },
             {
               role: "user",
