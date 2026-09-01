@@ -3,7 +3,7 @@
 Herb Vatika for AYUSH Sector is made using React.js, Node.js, Express.js, MongoDB, Python, AI/ML, Three.js, AR.<br>
 Developed a full-stack web platform for exploring AYUSH medicinal plants with AI chatbot, herbal diagnosis, plant identification, disease detection, AR-based virtual tours, bookmarks, notes, and advanced search & filtering features.<br>
 Live Link :-
-<a href="https://virtual-herbal-garden-project-6.onrender.com/">https://virtual-herbal-garden-project-6.onrender.com/</a>
+<a href="https://virtual-herbal-garden-project-1.onrender.com">https://virtual-herbal-garden-project-1.onrender.com</a>
 <br>
 Here are some pictures :-
 <h4>Login Page</h4>
