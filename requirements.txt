@@ -1,0 +1,6 @@
+pillow
+torch
+transformers
+huggingface_hub
+accelerate
+safetensors
