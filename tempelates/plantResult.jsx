@@ -2,6 +2,7 @@ const React = require("react");
 
 function PlantResult({
     plant,
+    confidence,
   image,
   diseases,
   diagnosis,
@@ -36,6 +37,12 @@ function PlantResult({
             <h2 className="plant-name">
   🌱 {plant}
 </h2>
+
+{confidence && (
+  <p>
+    Detection Confidence: {confidence}%
+  </p>
+)}
 
             {/* {
   image && (

@@ -1,5 +1,4 @@
 const multer = require("multer");
-const { spawn } = require("child_process");
 const fs = require("fs");
 const express = require("express");
 const path = require("path");
@@ -560,91 +559,128 @@ app.get("/plant-doctor", (req, res) => {
 app.post(
   "/predict-plant",
   upload.single("plantImage"),
-
   async (req, res) => {
     try {
       if (!req.file) {
-        return res.send("No file uploaded");
+        return res.status(400).send("No file uploaded");
       }
 
-      const imagePath = path.join(__dirname, "../", req.file.path);
+      console.log("Image received:", req.file.path);
 
-      console.log("IMAGE PATH:", imagePath);
+      // Connect to Hugging Face Space
+      const { Client } = await import("@gradio/client");
 
-      const pythonProcess = spawn("python", ["ml/predict.py", imagePath], {
-        cwd: path.join(__dirname, ".."),
-      });
-
-      let result = "";
-      let errorOutput = "";
-
-      pythonProcess.stdout.on("data", (data) => {
-        const text = data.toString();
-
-        console.log("STDOUT:", text);
-
-        result += text;
-      });
-
-      pythonProcess.stderr.on("data", (data) => {
-        const text = data.toString();
-
-        console.log("STDERR:", text);
-
-        errorOutput += text;
-      });
-
-      pythonProcess.on(
-        "close",
-
-        async (code) => {
-          console.log("Python exited with code:", code);
-
-          console.log("FULL RESULT:\n", result);
-
-          if (code !== 0) {
-            return res.send("Python Prediction Failed");
-          }
-
-          let detectedPlant = "Unknown";
-
-          const output = result.toLowerCase();
-
-          if (output.includes("tulsi") || output.includes("tulasi")) {
-            detectedPlant = "Tulsi";
-          } else if (output.includes("neem")) {
-            detectedPlant = "Neem";
-          } else if (output.includes("aloevera") || output.includes("aloe")) {
-            detectedPlant = "Aloe Vera";
-          } else if (output.includes("brahmi") || output.includes("bhrami")) {
-            detectedPlant = "Brahmi";
-          }
-
-          const diseases = await PlantDisease.find({
-            plantName: detectedPlant,
-          });
-
-          res.render("plantResult", {
-            plant: detectedPlant,
-
-            image: "/" + req.file.path.replace(/\\/g, "/"),
-
-            diseases,
-
-            diagnosis: null,
-
-            selectedSymptoms: [],
-          });
-        },
+      const client = await Client.connect(
+        "sainikhushi612/herbal-plant-detector",
+        {
+          token: process.env.HF_TOKEN,
+        }
       );
-    } catch (err) {
-      console.log(err);
 
-      res.send("Prediction Error");
+      console.log("Connected to Hugging Face Space");
+
+      // Read uploaded image
+      const imageBuffer = fs.readFileSync(req.file.path);
+
+      // Send image to Hugging Face Space
+      const result = await client.predict(
+        "/predict",
+        [imageBuffer]
+      );
+
+      console.log("HF Result:", result.data);
+
+      // Get prediction from Hugging Face
+      const prediction = result.data?.[0];
+
+      if (!prediction) {
+        return res
+          .status(500)
+          .send("No prediction received from Hugging Face");
+      }
+
+      // Raw prediction from model
+      const rawPlant = String(prediction.plant || "");
+
+      const confidence = prediction.confidence;
+
+      console.log("Raw Plant:", rawPlant);
+      console.log("Confidence:", confidence);
+
+      
+      // Normalize plant name
+    
+
+      let detectedPlant = "Unknown";
+
+      const output = rawPlant.toLowerCase().replace(/[\s_-]+/g, "");
+
+      if (
+        output.includes("tulsi") ||
+        output.includes("tulasi")
+      ) {
+        detectedPlant = "Tulsi";
+
+      } else if (
+        output.includes("neem")
+      ) {
+        detectedPlant = "Neem";
+
+      } else if (
+        output.includes("aloevera") ||
+        output.includes("aloe")
+      ) {
+        detectedPlant = "Aloe Vera";
+
+      } else if (
+        output.includes("brahmi") ||
+        output.includes("bhrami")
+      ) {
+        detectedPlant = "Brahmi";
+      }
+
+      console.log("Detected Plant:", detectedPlant);
+
+      
+      // Find diseases using normalized name
+      
+
+      const diseases = await PlantDisease.find({
+        plantName: detectedPlant,
+      });
+
+      console.log(
+        "Diseases found:",
+        diseases.length
+      );
+
+      
+      // Render result page
+      
+
+      res.render("plantResult", {
+        plant: detectedPlant,
+        confidence: confidence,
+        image:
+          "/" +
+          req.file.path.replace(/\\/g, "/"),
+        diseases,
+        diagnosis: null,
+        selectedSymptoms: [],
+      });
+
+    } catch (error) {
+      console.error(
+        "Plant prediction error:",
+        error
+      );
+
+      res.status(500).send(
+        "Plant prediction failed. Please try again."
+      );
     }
-  },
+  }
 );
-
 app.post(
   "/final-diagnosis",
 
